@@ -1,6 +1,0 @@
-pyproject.toml
-fedarated_mmm.egg-info/PKG-INFO
-fedarated_mmm.egg-info/SOURCES.txt
-fedarated_mmm.egg-info/dependency_links.txt
-fedarated_mmm.egg-info/requires.txt
-fedarated_mmm.egg-info/top_level.txt
