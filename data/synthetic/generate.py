@@ -10,7 +10,12 @@ from seasonality import (
     b2b_seasonality,
     flat_seasonality,
     uniform_seasonality,
-    event_driven_seasonality,
+    event_driven_seasonality, 
+    q4_heavy_seasonality,
+    summer_peak_seasonality,
+    spring_peak_seasonality,
+    fall_peak_seasonality,
+    bimodal_seasonality,
 )
 
 def apply_adstock(spend: np.ndarray, alpha: float) -> np.ndarray:
@@ -49,6 +54,11 @@ def generate_participant_data(
         "flat":         flat_seasonality,
         "uniform":      uniform_seasonality,
         "event_driven": event_driven_seasonality,
+        "q4_heavy":     q4_heavy_seasonality,
+        "summer_peak":  summer_peak_seasonality,
+        "spring_peak":  spring_peak_seasonality,
+        "fall_peak":    fall_peak_seasonality,
+        "bimodal":      bimodal_seasonality,
     }
 
     pattern_fn = seasonality_map.get(seasonality_type)

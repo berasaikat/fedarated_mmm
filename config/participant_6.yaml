@@ -6,7 +6,7 @@ channel_descriptions:
   social: "Prospecting and retargeting on social media platforms"
   tv: "National programmatic TV buys"
   ooh: "Digital out-of-home in top DMAs"
-seasonality_pattern: "summer_peak"
+seasonality_pattern: "flat"
 budget_share:
   paid_search: 0.45
   social: 0.35

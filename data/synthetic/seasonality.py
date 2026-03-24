@@ -51,3 +51,58 @@ def event_driven_seasonality(n_weeks: int) -> np.ndarray:
         if w - 1 >= 0:
             index[w - 1] *= 1.4
     return index
+
+def q4_heavy_seasonality(n_weeks: int) -> np.ndarray:
+    index = np.ones(n_weeks)
+    for i in range(n_weeks):
+        woy = (i % 52) + 1
+        if 40 <= woy <= 46:
+            index[i] = 1.4   # pre-holiday ramp
+        elif 47 <= woy <= 52:
+            index[i] = 1.9   # peak holiday
+        elif 1 <= woy <= 4:
+            index[i] = 1.2   # post-holiday tail
+    return index
+
+def summer_peak_seasonality(n_weeks: int) -> np.ndarray:
+    index = np.ones(n_weeks)
+    for i in range(n_weeks):
+        woy = (i % 52) + 1
+        if 22 <= woy <= 35:
+            index[i] = 1.5
+        elif 48 <= woy <= 52 or 1 <= woy <= 4:
+            index[i] = 0.7   # winter trough
+    return index
+
+def spring_peak_seasonality(n_weeks: int) -> np.ndarray:
+    index = np.ones(n_weeks)
+    for i in range(n_weeks):
+        woy = (i % 52) + 1
+        if 10 <= woy <= 20:
+            index[i] = 1.5
+        elif 40 <= woy <= 52:
+            index[i] = 0.8
+    return index
+
+def fall_peak_seasonality(n_weeks: int) -> np.ndarray:
+    index = np.ones(n_weeks)
+    for i in range(n_weeks):
+        woy = (i % 52) + 1
+        if 35 <= woy <= 44:
+            index[i] = 1.5
+        elif 15 <= woy <= 28:
+            index[i] = 0.85
+    return index
+
+def bimodal_seasonality(n_weeks: int) -> np.ndarray:
+    """Two equal peaks: early summer and year-end."""
+    index = np.ones(n_weeks)
+    for i in range(n_weeks):
+        woy = (i % 52) + 1
+        if 24 <= woy <= 28:
+            index[i] = 1.4
+        elif 48 <= woy <= 52:
+            index[i] = 1.4
+        elif 10 <= woy <= 15 or 35 <= woy <= 40:
+            index[i] = 0.85
+    return index
