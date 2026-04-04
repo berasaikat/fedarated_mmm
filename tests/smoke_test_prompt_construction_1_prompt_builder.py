@@ -1,6 +1,7 @@
 import yaml
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from llm_prior.prompt_builder import build_elicitation_prompt
 
@@ -9,9 +10,7 @@ with open("config/participant_1.yaml") as f:
 
 channels = cfg["channel_descriptions"]
 prompt = build_elicitation_prompt(
-    participant_config=cfg,
-    channels=channels,
-    posterior_history=None
+    participant_config=cfg, channels=channels, posterior_history=None
 )
 
 print(prompt)

@@ -5,12 +5,13 @@ from pathlib import Path
 from unittest.mock import MagicMock
 
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 output_dir = tempfile.mkdtemp()
 
 try:
-    channels     = ["paid_search", "social", "tv", "ooh"]
+    channels = ["paid_search", "social", "tv", "ooh"]
     participants = ["participant_1", "participant_2", "participant_3"]
 
     # ── Shared fake data ──────────────────────────────────────────────
@@ -18,7 +19,7 @@ try:
         {
             "round_num": r,
             "global_summary": {
-                ch: {"mean": 0.2 + r*0.02 + i*0.05, "std": 0.08}
+                ch: {"mean": 0.2 + r * 0.02 + i * 0.05, "std": 0.08}
                 for i, ch in enumerate(channels)
             },
             "surprise_scores": {
@@ -35,7 +36,7 @@ try:
         {
             "round_num": r,
             "participant_id": p,
-            "priors": {ch: {"mu": 0.2, "sigma": 0.1} for ch in channels}
+            "priors": {ch: {"mu": 0.2, "sigma": 0.1} for ch in channels},
         }
         for r in range(1, 6)
         for p in participants
@@ -46,11 +47,11 @@ try:
             "channel": ch,
             "mmm_beta_mean": 0.30,
             "mmm_beta_ci": [0.20, 0.40],
-            "att_estimate_normalized": 0.28 + i*0.05,
+            "att_estimate_normalized": 0.28 + i * 0.05,
             "att_estimate_raw": 280.0,
             "coverage": i % 2 == 0,
-            "gap": -0.02 + i*0.01,
-            "att_p_value": 0.001
+            "gap": -0.02 + i * 0.01,
+            "att_p_value": 0.001,
         }
         for i, ch in enumerate(channels)
     ]
@@ -59,19 +60,21 @@ try:
     mock_tracker = MagicMock()
     mock_tracker.total_epsilon = 2.0
     mock_tracker.spent_budgets = {
-        p: {"epsilon": 0.5 * (i+1), "delta": 1e-5}
-        for i, p in enumerate(participants)
+        p: {"epsilon": 0.5 * (i + 1), "delta": 1e-5} for i, p in enumerate(participants)
     }
 
     # ── 1. Posterior evolution ────────────────────────────────────────
     from visualization.posterior_plots import plot_posterior_evolution
 
     out1 = str(Path(output_dir) / "posterior_evolution.png")
-    plot_posterior_evolution(round_history, channels, out1,
-                             priors_history=priors_history)
+    plot_posterior_evolution(
+        round_history, channels, out1, priors_history=priors_history
+    )
 
     assert Path(out1).exists(), "posterior_evolution.png not created"
-    assert Path(out1).stat().st_size > 1000, "posterior_evolution.png suspiciously small"
+    assert (
+        Path(out1).stat().st_size > 1000
+    ), "posterior_evolution.png suspiciously small"
 
     prior_vs_post = Path(output_dir) / "prior_vs_posterior.png"
     assert prior_vs_post.exists(), "prior_vs_posterior.png not created"
@@ -109,10 +112,13 @@ try:
 
     # ── 5. Edge cases — empty inputs should not crash ─────────────────
     plot_posterior_evolution([], channels, str(Path(output_dir) / "empty.png"))
-    plot_budget_consumption(MagicMock(total_epsilon=1.0, spent_budgets={}),
-                            str(Path(output_dir) / "empty_budget.png"))
-    plot_surprise_heatmap([], participants, channels,
-                          str(Path(output_dir) / "empty_heatmap.png"))
+    plot_budget_consumption(
+        MagicMock(total_epsilon=1.0, spent_budgets={}),
+        str(Path(output_dir) / "empty_budget.png"),
+    )
+    plot_surprise_heatmap(
+        [], participants, channels, str(Path(output_dir) / "empty_heatmap.png")
+    )
     plot_audit_results([], str(Path(output_dir) / "empty_audit.png"))
     print("Edge cases — empty inputs handled without crash")
 

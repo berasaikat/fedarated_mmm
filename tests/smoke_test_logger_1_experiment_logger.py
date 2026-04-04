@@ -4,6 +4,7 @@ import tempfile
 import shutil
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from config.experiment_logger import ExperimentLogger
 
@@ -20,7 +21,7 @@ try:
     # Test 2 — log_round writes to rounds.jsonl
     global_summary = {
         "paid_search": {"mean": 0.35, "std": 0.08},
-        "social":      {"mean": 0.18, "std": 0.10},
+        "social": {"mean": 0.18, "std": 0.10},
     }
     surprise_scores = {"participant_1": {"paid_search": 0.3, "social": 0.1}}
 
@@ -29,7 +30,7 @@ try:
         global_summary=global_summary,
         surprise_scores=surprise_scores,
         epsilon_spent_per_participant=0.5,
-        num_active_participants=3
+        num_active_participants=3,
     )
 
     with open(logger.rounds_log_path) as f:
@@ -37,14 +38,17 @@ try:
 
     assert len(lines) == 1
     assert lines[0]["round_num"] == 1
-    assert lines[0]["epsilon_spent_total"] == 1.5   # 0.5 * 3
+    assert lines[0]["epsilon_spent_total"] == 1.5  # 0.5 * 3
     assert lines[0]["num_active_participants"] == 3
     assert "global_summary" in lines[0]
     assert "surprise_scores" in lines[0]
     print("Test 2 — log_round writes correct JSONL with total epsilon")
 
     # Test 3 — log_priors writes to priors.jsonl
-    priors = {"paid_search": {"mu": 0.3, "sigma": 0.1}, "social": {"mu": 0.2, "sigma": 0.1}}
+    priors = {
+        "paid_search": {"mu": 0.3, "sigma": 0.1},
+        "social": {"mu": 0.2, "sigma": 0.1},
+    }
     logger.log_priors(round_num=1, participant_id="participant_1", priors_dict=priors)
 
     with open(logger.priors_log_path) as f:
@@ -63,7 +67,7 @@ try:
         "mmm_beta_ci": [0.25, 0.45],
         "att_estimate_normalized": 0.33,
         "coverage": True,
-        "gap": -0.02
+        "gap": -0.02,
     }
     logger.log_audit(audit_result)
 
@@ -81,7 +85,7 @@ try:
         global_summary=global_summary,
         surprise_scores=surprise_scores,
         epsilon_spent_per_participant=0.5,
-        num_active_participants=3
+        num_active_participants=3,
     )
     logger.log_priors(round_num=2, participant_id="participant_2", priors_dict=priors)
 
@@ -115,24 +119,25 @@ try:
     print("Test 7 — JSONL files append correctly across multiple rounds")
 
     # Test 8 — read-back methods work
-    rounds  = logger.read_rounds()
+    rounds = logger.read_rounds()
     priors_ = logger.read_priors()
-    audits  = logger.read_audits()
+    audits = logger.read_audits()
 
-    assert len(rounds)  == 2
+    assert len(rounds) == 2
     assert len(priors_) == 2
-    assert len(audits)  == 1
+    assert len(audits) == 1
     print("Test 8 — read-back methods return correct entry counts")
 
     # Test 9 — numpy floats serialize without error
     import numpy as np
+
     np_summary = {"paid_search": {"mean": np.float32(0.35), "std": np.float64(0.08)}}
     logger.log_round(
         round_num=3,
         global_summary=np_summary,
         surprise_scores={},
         epsilon_spent_per_participant=0.5,
-        num_active_participants=1
+        num_active_participants=1,
     )
     with open(logger.rounds_log_path) as f:
         last = [json.loads(l) for l in f if l.strip()][-1]

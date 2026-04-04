@@ -1,6 +1,7 @@
 from unittest.mock import patch, MagicMock
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from aggregator.federated_loop import run_federated_training
 import yaml, tempfile, os
@@ -19,26 +20,35 @@ test_config = {
     "participants": [
         {
             "id": "participant_1",
-            "channels": {"paid_search": "desc", "social": "desc",
-                        "tv": "desc", "ooh": "desc"}
+            "channels": {
+                "paid_search": "desc",
+                "social": "desc",
+                "tv": "desc",
+                "ooh": "desc",
+            },
         },
         {
             "id": "participant_2",
-            "channels": {"paid_search": "desc", "social": "desc",
-                        "tv": "desc", "ooh": "desc"}
-        }
-    ]
+            "channels": {
+                "paid_search": "desc",
+                "social": "desc",
+                "tv": "desc",
+                "ooh": "desc",
+            },
+        },
+    ],
 }
 
 # Write to temp yaml
-with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml",
-                                  delete=False) as f:
+with tempfile.NamedTemporaryFile(mode="w", suffix=".yaml", delete=False) as f:
     yaml.dump(test_config, f)
     config_path = f.name
 
 # Patch LocalTrainer and PriorElicitor to avoid real MCMC and API calls
-with patch("aggregator.federated_loop.LocalTrainer") as MockTrainer, \
-     patch("aggregator.federated_loop.PriorElicitor") as MockElicitor:
+with (
+    patch("aggregator.federated_loop.LocalTrainer") as MockTrainer,
+    patch("aggregator.federated_loop.PriorElicitor") as MockElicitor,
+):
 
     # Setup mock trainer instances
     def make_trainer(participant_id, participant_config, channels):
@@ -48,8 +58,7 @@ with patch("aggregator.federated_loop.LocalTrainer") as MockTrainer, \
         t.channels = channels
         t.posterior_history = None
         t.train.return_value = {
-            ch: {"mean": 0.25, "std": 0.08, "p5": 0.10,
-                 "p95": 0.40, "r_hat": 1.01}
+            ch: {"mean": 0.25, "std": 0.08, "p5": 0.10, "p95": 0.40, "r_hat": 1.01}
             for ch in channels
         }
         return t
@@ -57,9 +66,12 @@ with patch("aggregator.federated_loop.LocalTrainer") as MockTrainer, \
     MockTrainer.side_effect = make_trainer
     mock_elicitor_instance = MagicMock()
     mock_elicitor_instance.elicit.return_value = {
-        "priors": {ch: {"mu": 0.2, "sigma": 0.15}
-                   for ch in ["paid_search", "social", "tv", "ooh"]},
-        "confidence": "medium", "notes": ""
+        "priors": {
+            ch: {"mu": 0.2, "sigma": 0.15}
+            for ch in ["paid_search", "social", "tv", "ooh"]
+        },
+        "confidence": "medium",
+        "notes": "",
     }
     MockElicitor.return_value = mock_elicitor_instance
 
@@ -81,9 +93,12 @@ for r in results:
     if not r["global_summary"]:
         print(f"  Round {r['round_num']}: empty summary (budget exhausted) — expected")
         continue
-    assert set(r["global_summary"].keys()) == \
-        {"paid_search", "social", "tv", "ooh"}, \
-        f"Round {r['round_num']} missing channels"
+    assert set(r["global_summary"].keys()) == {
+        "paid_search",
+        "social",
+        "tv",
+        "ooh",
+    }, f"Round {r['round_num']} missing channels"
     print(f"  Round {r['round_num']}: channels present")
 
 print("federated_loop runs end-to-end")

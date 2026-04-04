@@ -1,52 +1,53 @@
 import json
 from typing import Dict, Any, List, Optional
 
+
 def build_elicitation_prompt(
     participant_config: Dict[str, Any],
     channels: Dict[str, str],
-    posterior_history: Optional[List[Dict[str, Any]]] = None
+    posterior_history: Optional[List[Dict[str, Any]]] = None,
 ) -> str:
     """
     Constructs a structured prompt for prior elicitation.
-    
+
     Args:
-        participant_config: Dictionary containing participant context like 
+        participant_config: Dictionary containing participant context like
                             industry_vertical, budget_share, seasonality, etc.
         channels: Dictionary mapping channel names to their descriptions.
         posterior_history: Optional list of dictionaries containing previous round posteriors.
                            e.g. [{"round": 1, "posteriors": {"paid_search": 0.3, ...}}]
-    
+
     Returns:
         A formatted prompt string.
     """
     industry_vertical = participant_config.get("industry_vertical", "Unknown")
     budget_shares = participant_config.get("budget_share", {})
     seasonality = participant_config.get("seasonality_pattern", "Unknown")
-    
+
     prompt_parts = []
-    
+
     # 1. Context and Objective
     prompt_parts.append(
         "You are an expert Marketing Mix Modeling (MMM) consultant.\n"
         "Your task is to elicit prior distributions for marketing channel effectiveness based on the provided context.\n"
     )
-    
+
     # 2. Participant Configuration
     prompt_parts.append(f"### Participant Context")
     prompt_parts.append(f"Industry Vertical: {industry_vertical}")
     prompt_parts.append(f"Seasonality: {seasonality}")
-    
+
     if budget_shares:
         prompt_parts.append(f"\nBudget Shares:")
         for ch, share in budget_shares.items():
             prompt_parts.append(f"- {ch}: {share}")
-            
+
     # 3. Channel Descriptions
     if channels:
         prompt_parts.append(f"\n### Media Channels")
         for ch, desc in channels.items():
             prompt_parts.append(f"- {ch}: {desc}")
-            
+
     # 4. Posterior History
     if posterior_history is not None and len(posterior_history) > 0:
         prompt_parts.append("\n### Previous Round Posteriors")
@@ -59,7 +60,7 @@ def build_elicitation_prompt(
             prompt_parts.append(f"\nRound: {round_num}")
             for ch, value in posteriors.items():
                 prompt_parts.append(f"- {ch}: {value}")
-                
+
     # 5. Output Instructions
     prompt_parts.append(
         "\n### Task Instructions\n"

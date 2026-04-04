@@ -2,6 +2,7 @@ import numpy as np
 import math
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from privacy.gaussian_mechanism import add_gaussian_noise
 
@@ -24,6 +25,7 @@ print(f"Observed noise std: {observed_std:.4f}")
 print(f"Ratio (observed/expected): {observed_std/expected_std:.3f}")
 
 # Should be within 10% of expected
-assert 0.9 < (observed_std / expected_std) < 1.1, \
-    f"Noise std is off — expected ~{expected_std:.3f}, got {observed_std:.3f}"
+assert (
+    0.9 < (observed_std / expected_std) < 1.1
+), f"Noise std is off — expected ~{expected_std:.3f}, got {observed_std:.3f}"
 print("Noise scale is statistically correct")

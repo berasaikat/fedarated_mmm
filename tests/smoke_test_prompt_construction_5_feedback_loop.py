@@ -1,6 +1,7 @@
 import yaml
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from llm_prior.elicitor import PriorElicitor
 from llm_prior.surprise import compute_surprise, aggregate_surprise
@@ -19,8 +20,10 @@ round1_priors = validate_priors(round1_result["priors"], channels)
 print(f"Round 1 priors: { {ch: v['mu'] for ch, v in round1_priors.items()} }")
 
 # --- Simulate posterior from MCMC (using Phase 3 key format) ---
-simulated_posterior = {ch: {"mean": v["mu"] * 1.3, "std": v["sigma"] * 0.8}
-                       for ch, v in round1_priors.items()}
+simulated_posterior = {
+    ch: {"mean": v["mu"] * 1.3, "std": v["sigma"] * 0.8}
+    for ch, v in round1_priors.items()
+}
 
 # --- Compute surprise ---
 surprise = compute_surprise(round1_priors, simulated_posterior)
@@ -35,7 +38,7 @@ round2_result = elicitor.refine(
     channels=channels,
     previous_priors=round1_priors,
     posterior_summary=simulated_posterior,
-    surprise_scores=surprise
+    surprise_scores=surprise,
 )
 round2_priors = validate_priors(round2_result["priors"], channels)
 print(f"Round 2 priors: { {ch: v['mu'] for ch, v in round2_priors.items()} }")

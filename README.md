@@ -139,3 +139,25 @@ The PyPI-style project name in `pyproject.toml` is **fedarated_mmm** (spelling a
 ## Contributing
 
 Match existing module style, keep changes scoped, and extend smoke tests when you add behavior that should keep working in CI-style runs.
+
+## Research Contributions
+
+This codebase explores three underexplored intersections:
+
+**1. LLM-in-the-loop Bayesian workflow**
+Prior distributions are not hand-tuned but elicited from an LLM using
+participant business context. KL surprise scores from each round feed
+back into the next round's prompt, creating a closed feedback loop
+between language model reasoning and Bayesian inference.
+
+**2. Federated causal identification under privacy constraints**
+Standard MMM assumes centralized data. This codebase explores what
+causal channel attribution is recoverable when only DP-noised posterior
+summaries are shared — and validates estimates against synthetic control
+holdout experiments.
+
+**3. Privacy-utility tradeoff on posterior summaries**
+Rather than applying DP to gradients (as in standard DP-SGD), this
+work applies the Gaussian mechanism to Bayesian posterior sufficient
+statistics, with a hierarchical shrinkage aggregator designed to
+partially compensate for noise-induced variance inflation.

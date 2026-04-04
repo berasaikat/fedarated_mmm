@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from aggregator.fed_avg_posterior import fedavg_posterior
 import math
@@ -12,7 +13,7 @@ summaries = [
 
 result = fedavg_posterior(summaries)
 print(f"paid_search mean: {result['paid_search']['mean']}")  # expected: 0.5
-print(f"social mean: {result['social']['mean']}")            # expected: 0.3
+print(f"social mean: {result['social']['mean']}")  # expected: 0.3
 
 assert abs(result["paid_search"]["mean"] - 0.5) < 1e-9, "Mean averaging wrong"
 assert abs(result["social"]["mean"] - 0.3) < 1e-9, "Mean averaging wrong"
@@ -24,8 +25,9 @@ print("Test 1 passed — basic averaging correct")
 # variances = [0.0064, 0.0064], mean of variances = 0.0064
 # total var = 0.0064 + 0.01 = 0.0164, std = sqrt(0.0164)
 expected_std = math.sqrt(0.0064 + 0.01)
-assert abs(result["paid_search"]["std"] - expected_std) < 1e-6, \
-    f"Expected std {expected_std:.4f}, got {result['paid_search']['std']:.4f}"
+assert (
+    abs(result["paid_search"]["std"] - expected_std) < 1e-6
+), f"Expected std {expected_std:.4f}, got {result['paid_search']['std']:.4f}"
 print(f"Test 2 passed — sigma uses law of total variance correctly")
 
 # Test 3 — empty input

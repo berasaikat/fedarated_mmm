@@ -3,12 +3,14 @@ Full pipeline integration test — runs 2 rounds with 3 participants.
 Mocks LLM API and uses reduced MCMC settings.
 Asserts all components wire together correctly end-to-end.
 """
+
 import json
 import shutil
 import tempfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 import sys
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 
 import numpy as np
@@ -29,7 +31,9 @@ def make_participant_csv(path: Path, seed: int):
     data["revenue"] = [max(0, shared[i] + rng.normal(0, 15)) for i in range(N_WEEKS)]
     for ch in CHANNELS:
         spend_mean = rng.uniform(100, 400)
-        data[ch] = list(np.maximum(0, rng.normal(spend_mean, spend_mean * 0.2, N_WEEKS)))
+        data[ch] = list(
+            np.maximum(0, rng.normal(spend_mean, spend_mean * 0.2, N_WEEKS))
+        )
     pd.DataFrame(data).to_csv(path, index=False)
 
 
@@ -79,14 +83,15 @@ def mock_llm_elicit(participant_config, channels, posterior_history=None):
 
 # ── Test ─────────────────────────────────────────────────────────────────────
 
+
 def test_full_pipeline():
     tmp = tempfile.mkdtemp()
     try:
         root = Path(tmp)
-        data_dir   = root / "data" / "synthetic"
+        data_dir = root / "data" / "synthetic"
         config_dir = root / "config"
         results_dir = root / "results"
-        logs_dir   = root / "logs" / "exp_001"
+        logs_dir = root / "logs" / "exp_001"
         data_dir.mkdir(parents=True)
         config_dir.mkdir(parents=True)
         results_dir.mkdir(parents=True)
@@ -109,6 +114,7 @@ def test_full_pipeline():
 
         # ── 2. Local trainer smoke (reduced MCMC) ─────────────────────────
         import sys
+
         sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
         from participants.local_trainer import LocalTrainer
@@ -118,8 +124,10 @@ def test_full_pipeline():
             config_path=str(config_dir / "participant_1.yaml"),
         )
         spend_matrix, revenue, spend_cols = trainer.load_data()
-        assert spend_matrix.shape == (N_WEEKS, len(CHANNELS)), \
-            f"Unexpected spend shape: {spend_matrix.shape}"
+        assert spend_matrix.shape == (
+            N_WEEKS,
+            len(CHANNELS),
+        ), f"Unexpected spend shape: {spend_matrix.shape}"
         assert revenue.shape == (N_WEEKS,)
         assert set(spend_cols) == set(CHANNELS)
         print("✓ Step 2 — LocalTrainer.load_data() correct shape")
@@ -141,29 +149,32 @@ def test_full_pipeline():
             num_chains=1,
             seed=42,
         )
-        samples  = result
+        samples = result
         expected_keys = [f"beta_{i}" for i in range(len(CHANNELS))]
-        assert all(k in samples for k in expected_keys), \
-            f"Missing beta samples. Got: {list(samples.keys())}"
+        assert all(
+            k in samples for k in expected_keys
+        ), f"Missing beta samples. Got: {list(samples.keys())}"
         print("✓ Step 3 — MCMC ran successfully for participant_1")
 
         # ── 4. Posterior extraction ───────────────────────────────────────
         from participants.posterior import extract_posterior_summary
 
         summary = extract_posterior_summary(samples)
-        assert len(summary) == len(CHANNELS), \
-            f"Expected {len(CHANNELS)} betas, got {len(summary)}"
+        assert len(summary) == len(
+            CHANNELS
+        ), f"Expected {len(CHANNELS)} betas, got {len(summary)}"
         for param, stats in summary.items():
-            assert np.isfinite(stats["mean"]),  f"{param} mean is not finite"
-            assert np.isfinite(stats["std"]),   f"{param} std is not finite"
-            assert stats["r_hat"] > 0,          f"{param} r_hat is zero"
+            assert np.isfinite(stats["mean"]), f"{param} mean is not finite"
+            assert np.isfinite(stats["std"]), f"{param} std is not finite"
+            assert stats["r_hat"] > 0, f"{param} r_hat is zero"
             if stats["r_hat"] > 1.1:
                 print(f"  ⚠ WARNING: {param} r_hat={stats['r_hat']:.3f}")
         print("✓ Step 4 — posterior summary extracted correctly")
 
         # ── 5. LLM prior elicitation (mocked) ────────────────────────────
-        with patch("llm_prior.elicitor.PriorElicitor.elicit",
-                   side_effect=mock_llm_elicit):
+        with patch(
+            "llm_prior.elicitor.PriorElicitor.elicit", side_effect=mock_llm_elicit
+        ):
             from llm_prior.elicitor import PriorElicitor
             from llm_prior.validator import validate_priors
 
@@ -187,14 +198,15 @@ def test_full_pipeline():
         posterior_by_channel = {
             ch: {
                 "mean": summary[f"beta_{i}"]["mean"],
-                "std":  summary[f"beta_{i}"]["std"],
+                "std": summary[f"beta_{i}"]["std"],
             }
             for i, ch in enumerate(CHANNELS)
         }
         surprise = compute_surprise(validated, posterior_by_channel)
         assert len(surprise) == len(CHANNELS)
-        assert all(v >= 0 for v in surprise.values()), \
-            "KL divergence must be non-negative"
+        assert all(
+            v >= 0 for v in surprise.values()
+        ), "KL divergence must be non-negative"
         mean_kl = aggregate_surprise(surprise)
         assert mean_kl >= 0
         print(f"✓ Step 6 — surprise scores computed (mean KL={mean_kl:.4f})")
@@ -217,8 +229,9 @@ def test_full_pipeline():
         )
         assert set(noisy.keys()) == set(CHANNELS)
         for ch in CHANNELS:
-            assert noisy[ch]["mean"] != posterior_by_channel[ch]["mean"], \
-                f"DP noise not applied to {ch}"
+            assert (
+                noisy[ch]["mean"] != posterior_by_channel[ch]["mean"]
+            ), f"DP noise not applied to {ch}"
         rem_eps, _ = tracker.remaining("participant_1")
         assert abs(rem_eps - 9.5) < 1e-9, f"Expected 9.5 remaining, got {rem_eps}"
         print("✓ Step 7 — DP sharing applied, budget correctly decremented")
@@ -228,14 +241,16 @@ def test_full_pipeline():
         from aggregator.hierarchical import hierarchical_pool
 
         fake_summaries = [
-            {ch: {"mean": 0.2 + j * 0.05 + i * 0.02, "std": 0.08}
-             for i, ch in enumerate(CHANNELS)}
+            {
+                ch: {"mean": 0.2 + j * 0.05 + i * 0.02, "std": 0.08}
+                for i, ch in enumerate(CHANNELS)
+            }
             for j in range(len(PARTICIPANTS))
         ]
-        global_avg  = fedavg_posterior(fake_summaries)
+        global_avg = fedavg_posterior(fake_summaries)
         global_hier = hierarchical_pool(fake_summaries, shrinkage=0.5)
 
-        assert set(global_avg.keys())  == set(CHANNELS)
+        assert set(global_avg.keys()) == set(CHANNELS)
         assert set(global_hier.keys()) == set(CHANNELS)
         for ch in CHANNELS:
             assert np.isfinite(global_avg[ch]["mean"])
@@ -244,7 +259,10 @@ def test_full_pipeline():
 
         # ── 9. Experiment logging ─────────────────────────────────────────
         from config.experiment_logger import ExperimentLogger
-        from aggregator.convergence import check_convergence, compute_convergence_metrics
+        from aggregator.convergence import (
+            check_convergence,
+            compute_convergence_metrics,
+        )
 
         exp_logger = ExperimentLogger("exp_001", str(root / "logs"))
         exp_logger.log_round(
@@ -255,14 +273,16 @@ def test_full_pipeline():
             num_active_participants=3,
         )
         exp_logger.log_priors(1, "participant_1", validated)
-        exp_logger.log_audit({
-            "channel": "paid_search",
-            "mmm_beta_mean": 0.3,
-            "mmm_beta_ci": [0.2, 0.4],
-            "att_estimate_normalized": 0.28,
-            "coverage": True,
-            "gap": -0.02,
-        })
+        exp_logger.log_audit(
+            {
+                "channel": "paid_search",
+                "mmm_beta_mean": 0.3,
+                "mmm_beta_ci": [0.2, 0.4],
+                "att_estimate_normalized": 0.28,
+                "coverage": True,
+                "gap": -0.02,
+            }
+        )
         exp_logger.log_round(
             round_num=2,
             global_summary=global_hier,
@@ -281,11 +301,13 @@ def test_full_pipeline():
         assert len(rounds_back) == 2
         assert rounds_back[0]["round_num"] == 1
         assert rounds_back[1]["round_num"] == 2
-        assert abs(exp_logger.summary["metrics"]["epsilon_spent_cumulated"] - 3.0) < 1e-9
+        assert (
+            abs(exp_logger.summary["metrics"]["epsilon_spent_cumulated"] - 3.0) < 1e-9
+        )
 
         history = [r["global_summary"] for r in rounds_back]
         converged = check_convergence(history[0], history[1], tol=0.05)
-        curves    = compute_convergence_metrics(history)
+        curves = compute_convergence_metrics(history)
         assert set(curves.keys()) == set(CHANNELS)
         assert all(len(v) == 1 for v in curves.values())
         print("✓ Step 9 — experiment logging, read-back, and convergence check correct")
@@ -300,28 +322,33 @@ def test_full_pipeline():
         from visualization.audit_chart import plot_audit_results
 
         plot_posterior_evolution(
-            rounds_back, CHANNELS,
+            rounds_back,
+            CHANNELS,
             str(plots_dir / "posterior_evolution.png"),
         )
-        plot_budget_consumption(
-            tracker, str(plots_dir / "privacy_budget.png")
-        )
+        plot_budget_consumption(tracker, str(plots_dir / "privacy_budget.png"))
         plot_surprise_heatmap(
-            rounds_back, ["participant_1"], CHANNELS,
+            rounds_back,
+            ["participant_1"],
+            CHANNELS,
             str(plots_dir / "surprise_heatmap.png"),
         )
         plot_audit_results(
             exp_logger.read_audits(),
             str(plots_dir / "audit_chart.png"),
         )
-        for png in ["posterior_evolution.png", "privacy_budget.png",
-                    "surprise_heatmap.png", "audit_chart.png"]:
+        for png in [
+            "posterior_evolution.png",
+            "privacy_budget.png",
+            "surprise_heatmap.png",
+            "audit_chart.png",
+        ]:
             assert (plots_dir / png).exists(), f"Missing plot: {png}"
         print("✓ Step 10 — all visualization plots generated without error")
 
-        print("\n" + "="*60)
+        print("\n" + "=" * 60)
         print("✓ FULL PIPELINE INTEGRATION TEST PASSED (10/10 steps)")
-        print("="*60)
+        print("=" * 60)
 
     finally:
         shutil.rmtree(tmp)

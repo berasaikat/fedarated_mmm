@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from llm_prior.elicitor import PriorElicitor
 from llm_prior.validator import validate_priors
@@ -17,9 +18,7 @@ elicitor = PriorElicitor()
 
 print("Calling Claude API...")
 result = elicitor.elicit(
-    participant_config=cfg,
-    channels=channels,
-    posterior_history=None
+    participant_config=cfg, channels=channels, posterior_history=None
 )
 
 print(f"\nRaw result keys: {result.keys()}")

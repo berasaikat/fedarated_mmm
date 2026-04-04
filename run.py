@@ -1,6 +1,7 @@
 """
 Main CLI for federated MMM: data generation, training, incrementality validation, and plots.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -112,13 +113,17 @@ def _select_round_payload_for_audit(
 
 def _load_matched_geos(audit_cfg: dict, root: Path) -> Dict[str, Any]:
     if "matched_geos_json" in audit_cfg and "matched_geos" in audit_cfg:
-        raise ValueError("incrementality_audit: use either matched_geos or matched_geos_json, not both.")
+        raise ValueError(
+            "incrementality_audit: use either matched_geos or matched_geos_json, not both."
+        )
     if "matched_geos_json" in audit_cfg:
         p = _resolve_path(root, audit_cfg["matched_geos_json"])
         with open(p, encoding="utf-8") as f:
             return json.load(f)
     if "matched_geos" not in audit_cfg:
-        raise ValueError("incrementality_audit requires matched_geos or matched_geos_json.")
+        raise ValueError(
+            "incrementality_audit requires matched_geos or matched_geos_json."
+        )
     mg = audit_cfg["matched_geos"]
     if isinstance(mg, str):
         p = _resolve_path(root, mg)
@@ -140,7 +145,9 @@ def cmd_validate(cfg_path: Path, dry_run: bool) -> None:
             "geo_csv, matched_geos / matched_geos_json, and channel."
         )
 
-    results_dir = _resolve_path(root, audit_cfg.get("results_dir", cfg.get("results_dir", "results")))
+    results_dir = _resolve_path(
+        root, audit_cfg.get("results_dir", cfg.get("results_dir", "results"))
+    )
     round_spec = audit_cfg.get("global_summary_round", audit_cfg.get("round", "last"))
     summaries = _load_round_summaries(results_dir)
     round_payload = _select_round_payload_for_audit(summaries, round_spec)
@@ -153,7 +160,10 @@ def cmd_validate(cfg_path: Path, dry_run: bool) -> None:
     if dry_run:
         print("[dry-run] Would load geo data:", geo_csv)
         print("[dry-run] Would load matched geos (keys):", list(matched_geos.keys()))
-        print("[dry-run] Would use global_summary from round:", round_payload.get("round_num"))
+        print(
+            "[dry-run] Would use global_summary from round:",
+            round_payload.get("round_num"),
+        )
         print("[dry-run] Would call causal_validation.audit.run_incrementality_audit(")
         print("[dry-run]   global_summary=<dict>, geo_data=<DataFrame>, ")
         print(f"[dry-run]   matched_geos={matched_geos!r},")
@@ -186,7 +196,9 @@ def _normalize_round_for_plots(row: Dict[str, Any]) -> Dict[str, Any]:
     return r
 
 
-def _participants_for_plots(round_history: List[Dict[str, Any]], cfg: dict) -> List[str]:
+def _participants_for_plots(
+    round_history: List[Dict[str, Any]], cfg: dict
+) -> List[str]:
     ids = cfg.get("participant_ids")
     if ids:
         return [str(x) for x in ids]
@@ -194,13 +206,19 @@ def _participants_for_plots(round_history: List[Dict[str, Any]], cfg: dict) -> L
     if n > 0:
         return [f"participant_{i}" for i in range(1, n + 1)]
     for payload in round_history:
-        d = payload.get("per_participant_surprise") or payload.get("surprise_scores") or {}
+        d = (
+            payload.get("per_participant_surprise")
+            or payload.get("surprise_scores")
+            or {}
+        )
         if d:
             return sorted(str(k) for k in d.keys())
     return []
 
 
-def _budget_tracker_proxy(round_history: List[Dict[str, Any]], cfg: dict, participants: List[str]) -> Any:
+def _budget_tracker_proxy(
+    round_history: List[Dict[str, Any]], cfg: dict, participants: List[str]
+) -> Any:
     priv = cfg.get("privacy") or {}
     total_eps = float(cfg.get("total_epsilon", priv.get("epsilon", 10.0)))
     spent: Dict[str, Dict[str, float]] = {
@@ -250,7 +268,9 @@ def cmd_visualize(cfg_path: Path, dry_run: bool) -> None:
 
     cfg = load_yaml(cfg_path.resolve())
     viz_cfg = cfg.get("visualization") or {}
-    results_dir = _resolve_path(root, viz_cfg.get("results_dir", cfg.get("results_dir", "results")))
+    results_dir = _resolve_path(
+        root, viz_cfg.get("results_dir", cfg.get("results_dir", "results"))
+    )
     out_dir = _resolve_path(root, viz_cfg.get("output_dir", "plots"))
     if not dry_run:
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -261,7 +281,9 @@ def cmd_visualize(cfg_path: Path, dry_run: bool) -> None:
     participants = _participants_for_plots(round_history, cfg)
 
     if not participants:
-        print("WARNING: Could not infer participant IDs — surprise heatmap will be skipped")
+        print(
+            "WARNING: Could not infer participant IDs — surprise heatmap will be skipped"
+        )
         print("  Add 'num_participants' or 'participant_ids' to your config")
 
     out_posterior = out_dir / "posterior_evolution.png"
@@ -327,15 +349,20 @@ def build_parser() -> argparse.ArgumentParser:
     p_train = sub.add_parser("train", help="Run federated training loop.")
     add_common_args(p_train)
 
-    p_val = sub.add_parser("validate", help="Run incrementality vs synthetic-control audit.")
+    p_val = sub.add_parser(
+        "validate", help="Run incrementality vs synthetic-control audit."
+    )
     add_common_args(p_val)
 
     p_viz = sub.add_parser("visualize", help="Render all diagnostic plots.")
     add_common_args(p_viz)
 
     p_report = sub.add_parser("report", help="Print experiment report to console.")
-    p_report.add_argument("experiment_dir", type=Path,
-                        help="Experiment folder with experiment_summary.json")
+    p_report.add_argument(
+        "experiment_dir",
+        type=Path,
+        help="Experiment folder with experiment_summary.json",
+    )
     p_report.add_argument("--config", type=Path, default=None)
 
     return parser

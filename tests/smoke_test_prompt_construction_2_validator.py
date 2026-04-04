@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from llm_prior.validator import validate_priors
 
@@ -8,9 +9,9 @@ channels = ["paid_search", "social", "tv", "ooh"]
 # Test 1 — all valid
 valid_input = {
     "paid_search": {"mu": 0.35, "sigma": 0.08},
-    "social":      {"mu": 0.18, "sigma": 0.10},
-    "tv":          {"mu": 0.25, "sigma": 0.12},
-    "ooh":         {"mu": 0.10, "sigma": 0.09},
+    "social": {"mu": 0.18, "sigma": 0.10},
+    "tv": {"mu": 0.25, "sigma": 0.12},
+    "ooh": {"mu": 0.10, "sigma": 0.09},
 }
 result = validate_priors(valid_input, channels)
 assert all(ch in result for ch in channels)

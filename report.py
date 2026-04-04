@@ -1,6 +1,7 @@
 """
 Console reporting for a federated experiment: rounds JSONL, summary, and audit logs.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -70,7 +71,9 @@ def convergence_for_round(
     return "no"
 
 
-def cumulative_epsilon_per_participant(rounds_sorted: List[dict], up_to_index: int) -> float:
+def cumulative_epsilon_per_participant(
+    rounds_sorted: List[dict], up_to_index: int
+) -> float:
     total = 0.0
     for i in range(up_to_index + 1):
         total += float(rounds_sorted[i].get("epsilon_spent_per_participant", 0.0))
@@ -176,9 +179,7 @@ def print_report(
     exp_dir = experiment_dir.resolve()
     summary_path = exp_dir / "experiment_summary.json"
     if not summary_path.exists():
-        raise FileNotFoundError(
-            f"Missing experiment_summary.json under {exp_dir}"
-        )
+        raise FileNotFoundError(f"Missing experiment_summary.json under {exp_dir}")
 
     summary = load_json(summary_path)
     logs_dir = exp_dir / "logs"
@@ -206,9 +207,7 @@ def print_report(
         + [f"beta_mean ({ch})" for ch in channels]
         + ["eps_remaining", "converged", "audit_coverage"]
     )
-    body = build_round_rows(
-        rounds_sorted, channels, total_epsilon, audit_col
-    )
+    body = build_round_rows(rounds_sorted, channels, total_epsilon, audit_col)
 
     def surprise_section_plain() -> None:
         print("\nLLM Prior Quality")
@@ -282,9 +281,7 @@ def print_report(
                 ch = ar.get("channel", "?")
                 cov = ar.get("coverage")
                 gap = ar.get("gap")
-                console.print(
-                    f"  - {ch}: coverage={cov}, gap={gap}"
-                )
+                console.print(f"  - {ch}: coverage={cov}, gap={gap}")
 
         console.print("\n[bold]LLM Prior Quality[/bold]")
         console.print("  Average surprise (per round, over participants x channels):")

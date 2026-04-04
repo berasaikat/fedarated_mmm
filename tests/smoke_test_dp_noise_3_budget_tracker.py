@@ -1,5 +1,6 @@
 import sys
 from pathlib import Path
+
 sys.path.append(str(Path(__file__).resolve().parent.parent))
 from privacy.budget_tracker import PrivacyBudgetTracker, PrivacyBudgetExhausted
 
@@ -7,7 +8,7 @@ from privacy.budget_tracker import PrivacyBudgetTracker, PrivacyBudgetExhausted
 tracker = PrivacyBudgetTracker(
     total_epsilon=1.0,
     total_delta=1e-5,
-    participant_ids=["participant_1", "participant_2"]
+    participant_ids=["participant_1", "participant_2"],
 )
 
 tracker.spend("participant_1", 0.3, 1e-6)
@@ -22,9 +23,7 @@ print("Participant budgets are independent")
 
 # Test 3 — budget exhaustion raises exception
 tracker2 = PrivacyBudgetTracker(
-    total_epsilon=0.5,
-    total_delta=1e-5,
-    participant_ids=["participant_1"]
+    total_epsilon=0.5, total_delta=1e-5, participant_ids=["participant_1"]
 )
 tracker2.spend("participant_1", 0.4, 1e-6)
 
@@ -36,9 +35,7 @@ except PrivacyBudgetExhausted as e:
 
 # Test 4 — is_exhausted flag
 tracker3 = PrivacyBudgetTracker(
-    total_epsilon=0.3,
-    total_delta=1e-5,
-    participant_ids=["participant_1"]
+    total_epsilon=0.3, total_delta=1e-5, participant_ids=["participant_1"]
 )
 assert not tracker3.is_exhausted("participant_1")
 tracker3.spend("participant_1", 0.3, 1e-6)
@@ -47,9 +44,7 @@ print("is_exhausted works correctly")
 
 # Test 5 — multi-round accumulation (5 rounds of 0.2 each on budget of 1.0)
 tracker4 = PrivacyBudgetTracker(
-    total_epsilon=1.0,
-    total_delta=1e-5,
-    participant_ids=["participant_1"]
+    total_epsilon=1.0, total_delta=1e-5, participant_ids=["participant_1"]
 )
 for round_num in range(5):
     tracker4.spend("participant_1", 0.2, 1e-6)
