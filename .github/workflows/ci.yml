@@ -23,5 +23,5 @@ jobs:
         run: |
           python tests/smoke_test_logger_1_experiment_logger.py
           python tests/smoke_test_logger_2_convergence.py
-          python tests/smoke_test_aggregator_1_fedavg.py
+          python tests/smoke_test_aggregator_1_fed_avg.py
           python tests/smoke_test_aggregator_2_hierarchical.py
