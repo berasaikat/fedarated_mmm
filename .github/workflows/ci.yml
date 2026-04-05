@@ -21,7 +21,7 @@ jobs:
 
       - name: Run smoke tests (offline only)
         run: |
-          python tests/smoke_test_phase9_1_experiment_logger.py
-          python tests/smoke_test_phase9_2_convergence.py
+          python tests/smoke_test_logger_1_experiment_logger.py
+          python tests/smoke_test_logger_2_convergence.py
           python tests/smoke_test_aggregator_1_fedavg.py
           python tests/smoke_test_aggregator_2_hierarchical.py
