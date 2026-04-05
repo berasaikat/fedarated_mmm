@@ -34,6 +34,11 @@ For development tools (pytest, formatters):
 ```bash
 pip install -e ".[dev]"
 ```
+For exact reproducibility use:
+
+```bash
+pip install -r requirements-lock.txt
+```
 
 You will need API credentials where the stack calls external LLMs (see `llm_prior/` and your environment). JAX/Torch stacks can be large; install on a machine that matches your CUDA/CPU targets if you use GPU.
 

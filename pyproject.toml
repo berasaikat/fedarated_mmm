@@ -1,12 +1,12 @@
 [project]
-name = "fedarated_mmm"
+name = "federated_mmm"
 version = "0.1.0"
 description = "Federated MMM project"
 requires-python = ">=3.10"
 dependencies = [
     "numpyro>=0.13",
     "jax>=0.4",
-    "flwr>=1.7",
+    "flwr>=1.4",
     "anthropic>=0.25",
     "torch>=2.2",
     "opacus>=1.4",
